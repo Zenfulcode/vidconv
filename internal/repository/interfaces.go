@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"wails-sveltekit-ts-tw-template/internal/models"
+	"zenfile/internal/models"
 )
 
 // ConversionRepository handles conversion history persistence

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"wails-sveltekit-ts-tw-template/internal/logger"
-	"wails-sveltekit-ts-tw-template/internal/models"
-	"wails-sveltekit-ts-tw-template/pkg/ffmpeg"
+	"zenfile/internal/logger"
+	"zenfile/internal/models"
+	"zenfile/pkg/ffmpeg"
 )
 
 // videoConverter handles video file conversion

@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"wails-sveltekit-ts-tw-template/internal/logger"
-	"wails-sveltekit-ts-tw-template/internal/models"
-	"wails-sveltekit-ts-tw-template/internal/repository"
+	"zenfile/internal/logger"
+	"zenfile/internal/models"
+	"zenfile/internal/repository"
 )
 
 // conversionServiceImpl orchestrates file conversions

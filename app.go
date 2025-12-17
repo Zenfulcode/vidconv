@@ -6,13 +6,13 @@ import (
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
-	"wails-sveltekit-ts-tw-template/internal/config"
-	"wails-sveltekit-ts-tw-template/internal/database"
-	"wails-sveltekit-ts-tw-template/internal/logger"
-	"wails-sveltekit-ts-tw-template/internal/models"
-	"wails-sveltekit-ts-tw-template/internal/repository"
-	"wails-sveltekit-ts-tw-template/internal/services"
-	"wails-sveltekit-ts-tw-template/pkg/ffmpeg"
+	"zenfile/internal/config"
+	"zenfile/internal/database"
+	"zenfile/internal/logger"
+	"zenfile/internal/models"
+	"zenfile/internal/repository"
+	"zenfile/internal/services"
+	"zenfile/pkg/ffmpeg"
 )
 
 // App struct holds the application state and dependencies

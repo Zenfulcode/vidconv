@@ -5,8 +5,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"wails-sveltekit-ts-tw-template/internal/logger"
-	"wails-sveltekit-ts-tw-template/internal/models"
+	"zenfile/internal/logger"
+	"zenfile/internal/models"
 )
 
 // settingsRepoImpl implements SettingsRepository

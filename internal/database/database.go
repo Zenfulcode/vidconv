@@ -9,8 +9,8 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 
-	"wails-sveltekit-ts-tw-template/internal/logger"
-	"wails-sveltekit-ts-tw-template/internal/models"
+	"zenfile/internal/logger"
+	"zenfile/internal/models"
 )
 
 // Database wraps the GORM database connection

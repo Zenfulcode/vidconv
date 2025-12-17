@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"wails-sveltekit-ts-tw-template/internal/logger"
+	"zenfile/internal/logger"
 )
 
 // FFmpeg wraps FFmpeg command execution

@@ -1,7 +1,7 @@
 package services
 
 import (
-	"wails-sveltekit-ts-tw-template/internal/models"
+	"zenfile/internal/models"
 )
 
 // FileService handles file operations

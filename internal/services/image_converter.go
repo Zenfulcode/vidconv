@@ -15,8 +15,8 @@ import (
 	"golang.org/x/image/tiff"
 	"golang.org/x/image/webp"
 
-	"wails-sveltekit-ts-tw-template/internal/logger"
-	"wails-sveltekit-ts-tw-template/internal/models"
+	"zenfile/internal/logger"
+	"zenfile/internal/models"
 )
 
 // imageConverter handles image file conversion

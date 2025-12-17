@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"wails-sveltekit-ts-tw-template/internal/logger"
-	"wails-sveltekit-ts-tw-template/internal/models"
+	"zenfile/internal/logger"
+	"zenfile/internal/models"
 )
 
 // fileServiceImpl implements FileService

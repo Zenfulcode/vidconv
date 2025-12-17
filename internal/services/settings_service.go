@@ -3,9 +3,9 @@ package services
 import (
 	"strconv"
 
-	"wails-sveltekit-ts-tw-template/internal/logger"
-	"wails-sveltekit-ts-tw-template/internal/models"
-	"wails-sveltekit-ts-tw-template/internal/repository"
+	"zenfile/internal/logger"
+	"zenfile/internal/models"
+	"zenfile/internal/repository"
 )
 
 // settingsServiceImpl implements SettingsService
