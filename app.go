@@ -3,11 +3,38 @@ package main
 import (
 	"context"
 	"fmt"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
+
+	"wails-sveltekit-ts-tw-template/internal/config"
+	"wails-sveltekit-ts-tw-template/internal/database"
+	"wails-sveltekit-ts-tw-template/internal/logger"
+	"wails-sveltekit-ts-tw-template/internal/models"
+	"wails-sveltekit-ts-tw-template/internal/repository"
+	"wails-sveltekit-ts-tw-template/internal/services"
+	"wails-sveltekit-ts-tw-template/pkg/ffmpeg"
 )
 
-// App struct
+// App struct holds the application state and dependencies
 type App struct {
 	ctx context.Context
+
+	// Configuration
+	config *config.Config
+
+	// Logger
+	log *logger.Logger
+
+	// Database
+	db *database.Database
+
+	// Services
+	fileService       services.FileService
+	conversionService services.ConversionService
+	settingsService   services.SettingsService
+
+	// FFmpeg
+	ffmpeg *ffmpeg.FFmpeg
 }
 
 // NewApp creates a new App application struct
@@ -15,13 +42,221 @@ func NewApp() *App {
 	return &App{}
 }
 
-// startup is called when the app starts. The context is saved
-// so we can call the runtime methods
+// startup is called when the app starts
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+
+	// Initialize configuration
+	cfg, err := config.New()
+	if err != nil {
+		fmt.Printf("Failed to initialize config: %v\n", err)
+		return
+	}
+	a.config = cfg
+
+	// Initialize logger
+	logLevel := logger.INFO
+	if cfg.Debug {
+		logLevel = logger.DEBUG
+	}
+	log, err := logger.New(cfg.LogFile, logLevel)
+	if err != nil {
+		fmt.Printf("Failed to initialize logger: %v\n", err)
+		return
+	}
+	a.log = log
+
+	log.Info("app", "Starting %s v%s", cfg.AppName, cfg.Version)
+	log.Debug("app", "Data directory: %s", cfg.DataDir)
+	log.Debug("app", "Log file: %s", cfg.LogFile)
+
+	// Initialize database
+	db, err := database.New(cfg.DatabaseURL, log)
+	if err != nil {
+		log.Error("app", "Failed to initialize database: %v", err)
+		return
+	}
+	a.db = db
+
+	// Initialize FFmpeg
+	a.ffmpeg = ffmpeg.New(cfg.FFmpegPath, log)
+	if a.ffmpeg.IsAvailable() {
+		if version, err := a.ffmpeg.GetVersion(); err == nil {
+			log.Info("app", "FFmpeg version: %s", version)
+		}
+	} else {
+		log.Warn("app", "FFmpeg not found - video conversion will not work")
+	}
+
+	// Initialize repositories
+	conversionRepo := repository.NewConversionRepository(db.DB, log)
+	settingsRepo := repository.NewSettingsRepository(db.DB, log)
+
+	// Initialize services
+	a.fileService = services.NewFileService(log)
+	videoConverter := services.NewVideoConverter(a.ffmpeg, log)
+	imageConverter := services.NewImageConverter(log)
+	a.conversionService = services.NewConversionService(
+		a.fileService,
+		videoConverter,
+		imageConverter,
+		conversionRepo,
+		log,
+	)
+	a.settingsService = services.NewSettingsService(settingsRepo, log)
+
+	log.Info("app", "Application startup complete")
 }
 
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
+// shutdown is called when the app is closing
+func (a *App) shutdown(ctx context.Context) {
+	if a.log != nil {
+		a.log.Info("app", "Application shutting down")
+	}
+
+	if a.db != nil {
+		a.db.Close()
+	}
+
+	if a.log != nil {
+		a.log.Close()
+	}
+}
+
+// SelectFiles opens a file dialog for selecting files
+func (a *App) SelectFiles() ([]models.FileInfo, error) {
+	a.log.Debug("app", "Opening file selection dialog")
+
+	files, err := runtime.OpenMultipleFilesDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Select Files to Convert",
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "Video Files",
+				Pattern:     "*.mp4;*.webm;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.m4v;*.mpeg;*.mpg;*.3gp;*.mts;*.m2ts;*.ts;*.vob;*.ogv;*.rm;*.rmvb;*.asf;*.divx;*.f4v",
+			},
+			{
+				DisplayName: "Image Files",
+				Pattern:     "*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tiff;*.tif",
+			},
+			{
+				DisplayName: "All Supported Files",
+				Pattern:     "*.mp4;*.webm;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.m4v;*.mpeg;*.mpg;*.3gp;*.mts;*.m2ts;*.ts;*.vob;*.ogv;*.rm;*.rmvb;*.asf;*.divx;*.f4v;*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp;*.tiff;*.tif",
+			},
+		},
+	})
+
+	if err != nil {
+		a.log.Error("app", "File selection error: %v", err)
+		return nil, err
+	}
+
+	if len(files) == 0 {
+		a.log.Debug("app", "No files selected")
+		return []models.FileInfo{}, nil
+	}
+
+	// Validate the selected files
+	validFiles, err := a.fileService.ValidateFiles(files)
+	if err != nil {
+		a.log.Error("app", "File validation error: %v", err)
+		return nil, err
+	}
+
+	a.log.Info("app", "Selected %d valid files", len(validFiles))
+	return validFiles, nil
+}
+
+// SelectDirectory opens a directory selection dialog
+func (a *App) SelectDirectory() (string, error) {
+	a.log.Debug("app", "Opening directory selection dialog")
+
+	dir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Select Output Directory",
+	})
+
+	if err != nil {
+		a.log.Error("app", "Directory selection error: %v", err)
+		return "", err
+	}
+
+	if dir != "" {
+		a.log.Info("app", "Selected output directory: %s", dir)
+		// Save as last used directory
+		a.settingsService.SetSetting(models.SettingLastOutputDir, dir)
+	}
+
+	return dir, nil
+}
+
+// GetOutputFormats returns available output formats for a file type
+func (a *App) GetOutputFormats(fileType string) []string {
+	ft := models.FileType(fileType)
+	formats := a.fileService.GetOutputFormats(ft)
+	a.log.Debug("app", "Output formats for %s: %v", fileType, formats)
+	return formats
+}
+
+// ConvertFiles converts multiple files
+func (a *App) ConvertFiles(request models.BatchConversionRequest) (*models.BatchConversionResult, error) {
+	a.log.Info("app", "Starting batch conversion: %d files to %s", len(request.Files), request.OutputFormat)
+
+	result, err := a.conversionService.ConvertBatch(request, func(progress models.ConversionProgress) {
+		// Emit progress event to frontend
+		runtime.EventsEmit(a.ctx, "conversion:progress", progress)
+	})
+
+	if err != nil {
+		a.log.Error("app", "Batch conversion error: %v", err)
+		return nil, err
+	}
+
+	// Emit completion event
+	runtime.EventsEmit(a.ctx, "conversion:complete", result)
+
+	a.log.Info("app", "Batch conversion complete: %d success, %d failed",
+		result.SuccessCount, result.FailCount)
+
+	return result, nil
+}
+
+// GetConversionHistory retrieves the conversion history
+func (a *App) GetConversionHistory(limit int) ([]models.Conversion, error) {
+	a.log.Debug("app", "Getting conversion history (limit: %d)", limit)
+	return a.conversionService.GetConversionHistory(limit)
+}
+
+// GetSettings retrieves user settings
+func (a *App) GetSettings() (*models.UserSettings, error) {
+	return a.settingsService.GetSettings()
+}
+
+// SaveSettings saves user settings
+func (a *App) SaveSettings(settings models.UserSettings) error {
+	return a.settingsService.SaveSettings(settings)
+}
+
+// CheckFFmpeg checks if FFmpeg is available
+func (a *App) CheckFFmpeg() bool {
+	return a.ffmpeg.IsAvailable()
+}
+
+// GetFFmpegVersion returns the FFmpeg version string
+func (a *App) GetFFmpegVersion() (string, error) {
+	return a.ffmpeg.GetVersion()
+}
+
+// GetAppInfo returns application information
+func (a *App) GetAppInfo() map[string]string {
+	info := map[string]string{
+		"name":    a.config.AppName,
+		"version": a.config.Version,
+		"dataDir": a.config.DataDir,
+		"logFile": a.config.LogFile,
+	}
+
+	if version, err := a.ffmpeg.GetVersion(); err == nil {
+		info["ffmpegVersion"] = version
+	}
+
+	return info
 }
