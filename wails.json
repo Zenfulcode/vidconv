@@ -10,5 +10,12 @@
   "author": {
     "name": "gustaavik",
     "email": "wailstemplate@zenfulcode.com"
+  },
+  "info": {
+    "companyName": "Zenfulcode",
+    "productName": "Zenfile",
+    "productVersion": "v1.0.0",
+    "copyright": "",
+    "comments": "Open Source image and video converter (github.com/zenfulcode/zenfile)"
   }
 }
