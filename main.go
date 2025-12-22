@@ -19,7 +19,7 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:     "File Converter",
+		Title:     "Zenfile",
 		Width:     1100,
 		Height:    750,
 		MinWidth:  800,
@@ -43,7 +43,7 @@ func main() {
 				UseToolbar:                 false,
 			},
 			About: &mac.AboutInfo{
-				Title:   "File Converter",
+				Title:   "Zenfile",
 				Message: "A cross-platform file converter for video and image files.\n\nVersion 1.0.0",
 			},
 		},

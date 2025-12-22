@@ -1,8 +1,8 @@
-# FileConverter - Desktop Application Architecture
+# Zenfile - Desktop Application Architecture
 
 ## Overview
 
-FileConverter is a cross-platform desktop application built with Wails.js that converts video and image files between different formats. The application uses Go for the backend, SvelteKit with Svelte 5 for the frontend, and SQLite for persistent storage.
+Zenfile is a cross-platform desktop application built with Wails.js that converts video and image files between different formats. The application uses Go for the backend, SvelteKit with Svelte 5 for the frontend, and SQLite for persistent storage.
 
 ## High-Level Architecture
 
@@ -282,7 +282,7 @@ type Setting struct {
 
 ### Log Output
 - Console output for development
-- File output (`~/.fileconverter/logs/app.log`) for production
+- File output (`~/.zenfile/logs/app.log`) for production
 - Automatic log rotation (configurable size limit)
 
 ### Log Format

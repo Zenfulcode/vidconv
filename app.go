@@ -12,7 +12,6 @@ import (
 	"zenfile/internal/models"
 	"zenfile/internal/repository"
 	"zenfile/internal/services"
-	"zenfile/pkg/ffmpeg"
 )
 
 // App struct holds the application state and dependencies
@@ -32,9 +31,6 @@ type App struct {
 	fileService       services.FileService
 	conversionService services.ConversionService
 	settingsService   services.SettingsService
-
-	// FFmpeg
-	ffmpeg *ffmpeg.FFmpeg
 }
 
 // NewApp creates a new App application struct
@@ -78,23 +74,13 @@ func (a *App) startup(ctx context.Context) {
 	}
 	a.db = db
 
-	// Initialize FFmpeg
-	a.ffmpeg = ffmpeg.New(cfg.FFmpegPath, log)
-	if a.ffmpeg.IsAvailable() {
-		if version, err := a.ffmpeg.GetVersion(); err == nil {
-			log.Info("app", "FFmpeg version: %s", version)
-		}
-	} else {
-		log.Warn("app", "FFmpeg not found - video conversion will not work")
-	}
-
 	// Initialize repositories
 	conversionRepo := repository.NewConversionRepository(db.DB, log)
 	settingsRepo := repository.NewSettingsRepository(db.DB, log)
 
 	// Initialize services
 	a.fileService = services.NewFileService(log)
-	videoConverter := services.NewVideoConverter(a.ffmpeg, log)
+	videoConverter := a.initVideoConverter(log)
 	imageConverter := services.NewImageConverter(log)
 	a.conversionService = services.NewConversionService(
 		a.fileService,
@@ -235,26 +221,27 @@ func (a *App) SaveSettings(settings models.UserSettings) error {
 	return a.settingsService.SaveSettings(settings)
 }
 
-// CheckFFmpeg checks if FFmpeg is available
+// CheckFFmpeg checks if the video converter backend is available
 func (a *App) CheckFFmpeg() bool {
-	return a.ffmpeg.IsAvailable()
+	return a.isFFmpegAvailable()
 }
 
-// GetFFmpegVersion returns the FFmpeg version string
+// GetFFmpegVersion returns the video converter backend version string
 func (a *App) GetFFmpegVersion() (string, error) {
-	return a.ffmpeg.GetVersion()
+	return a.getConverterVersion()
 }
 
 // GetAppInfo returns application information
 func (a *App) GetAppInfo() map[string]string {
 	info := map[string]string{
-		"name":    a.config.AppName,
-		"version": a.config.Version,
-		"dataDir": a.config.DataDir,
-		"logFile": a.config.LogFile,
+		"name":             a.config.AppName,
+		"version":          a.config.Version,
+		"dataDir":          a.config.DataDir,
+		"logFile":          a.config.LogFile,
+		"converterBackend": a.getConverterBackend(),
 	}
 
-	if version, err := a.ffmpeg.GetVersion(); err == nil {
+	if version, err := a.getConverterVersion(); err == nil {
 		info["ffmpegVersion"] = version
 	}
 

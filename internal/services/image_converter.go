@@ -50,8 +50,8 @@ func (c *imageConverter) Convert(job models.ConversionJob, progressCallback func
 	inputFile, err := os.Open(job.InputPath)
 	if err != nil {
 		result.ErrorMessage = fmt.Sprintf("Failed to open input file: %v", err)
-		c.log.Error(result.ErrorMessage)
-		return result, fmt.Errorf(result.ErrorMessage)
+		c.log.Error("%s", result.ErrorMessage)
+		return result, fmt.Errorf("%s", result.ErrorMessage)
 	}
 	defer inputFile.Close()
 
@@ -83,8 +83,8 @@ func (c *imageConverter) Convert(job models.ConversionJob, progressCallback func
 
 	if err != nil {
 		result.ErrorMessage = fmt.Sprintf("Failed to decode image: %v", err)
-		c.log.Error(result.ErrorMessage)
-		return result, fmt.Errorf(result.ErrorMessage)
+		c.log.Error("%s", result.ErrorMessage)
+		return result, fmt.Errorf("%s", result.ErrorMessage)
 	}
 
 	if progressCallback != nil {
@@ -95,16 +95,16 @@ func (c *imageConverter) Convert(job models.ConversionJob, progressCallback func
 	outputDir := filepath.Dir(job.OutputPath)
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		result.ErrorMessage = fmt.Sprintf("Failed to create output directory: %v", err)
-		c.log.Error(result.ErrorMessage)
-		return result, fmt.Errorf(result.ErrorMessage)
+		c.log.Error("%s", result.ErrorMessage)
+		return result, fmt.Errorf("%s", result.ErrorMessage)
 	}
 
 	// Check if output file already exists
 	if !job.OverwriteOutput {
 		if _, err := os.Stat(job.OutputPath); err == nil {
 			result.ErrorMessage = fmt.Sprintf("Output file already exists: %s", job.OutputPath)
-			c.log.Error(result.ErrorMessage)
-			return result, fmt.Errorf(result.ErrorMessage)
+			c.log.Error("%s", result.ErrorMessage)
+			return result, fmt.Errorf("%s", result.ErrorMessage)
 		}
 	}
 
@@ -112,8 +112,8 @@ func (c *imageConverter) Convert(job models.ConversionJob, progressCallback func
 	outputFile, err := os.Create(job.OutputPath)
 	if err != nil {
 		result.ErrorMessage = fmt.Sprintf("Failed to create output file: %v", err)
-		c.log.Error(result.ErrorMessage)
-		return result, fmt.Errorf(result.ErrorMessage)
+		c.log.Error("%s", result.ErrorMessage)
+		return result, fmt.Errorf("%s", result.ErrorMessage)
 	}
 	defer outputFile.Close()
 
@@ -139,18 +139,18 @@ func (c *imageConverter) Convert(job models.ConversionJob, progressCallback func
 		// WebP encoding requires a different library, fall back to PNG for now
 		// In production, use github.com/chai2010/webp or similar
 		result.ErrorMessage = "WebP encoding is not supported as output format"
-		c.log.Error(result.ErrorMessage)
-		return result, fmt.Errorf(result.ErrorMessage)
+		c.log.Error("%s", result.ErrorMessage)
+		return result, fmt.Errorf("%s", result.ErrorMessage)
 	default:
 		result.ErrorMessage = fmt.Sprintf("Unsupported output format: %s", outputFormat)
-		c.log.Error(result.ErrorMessage)
-		return result, fmt.Errorf(result.ErrorMessage)
+		c.log.Error("%s", result.ErrorMessage)
+		return result, fmt.Errorf("%s", result.ErrorMessage)
 	}
 
 	if err != nil {
 		result.ErrorMessage = fmt.Sprintf("Failed to encode image: %v", err)
-		c.log.Error(result.ErrorMessage)
-		return result, fmt.Errorf(result.ErrorMessage)
+		c.log.Error("%s", result.ErrorMessage)
+		return result, fmt.Errorf("%s", result.ErrorMessage)
 	}
 
 	if progressCallback != nil {

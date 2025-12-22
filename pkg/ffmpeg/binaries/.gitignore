@@ -1,0 +1,10 @@
+# Ignore FFmpeg binaries (they're too large for git)
+# Download them using: ./scripts/download-ffmpeg.sh
+darwin_amd64/
+darwin_arm64/
+linux_amd64/
+windows_amd64/
+
+# Keep the directory structure
+!.gitkeep
+!README.md

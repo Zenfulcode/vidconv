@@ -38,14 +38,14 @@ func New() (*Config, error) {
 	}
 
 	return &Config{
-		AppName:     "FileConverter",
+		AppName:     "Zenfile",
 		Version:     "1.0.0",
 		DataDir:     dataDir,
 		LogDir:      logDir,
 		LogFile:     filepath.Join(logDir, "app.log"),
 		DatabaseDir: dbDir,
-		DatabaseURL: filepath.Join(dbDir, "fileconverter.db"),
-		FFmpegPath:  findFFmpeg(),
+		DatabaseURL: filepath.Join(dbDir, "zenfile.db"),
+		FFmpegPath:  findFFmpeg(dataDir),
 		Debug:       os.Getenv("DEBUG") == "true",
 	}, nil
 }
@@ -77,41 +77,5 @@ func getDataDir() (string, error) {
 		}
 	}
 
-	return filepath.Join(baseDir, "FileConverter"), nil
-}
-
-// findFFmpeg attempts to find the FFmpeg executable
-func findFFmpeg() string {
-	// Check common locations based on OS
-	var candidates []string
-
-	switch runtime.GOOS {
-	case "windows":
-		candidates = []string{
-			"ffmpeg.exe",
-			filepath.Join(os.Getenv("ProgramFiles"), "ffmpeg", "bin", "ffmpeg.exe"),
-			filepath.Join(os.Getenv("ProgramFiles(x86)"), "ffmpeg", "bin", "ffmpeg.exe"),
-		}
-	case "darwin":
-		candidates = []string{
-			"ffmpeg",
-			"/usr/local/bin/ffmpeg",
-			"/opt/homebrew/bin/ffmpeg",
-		}
-	default:
-		candidates = []string{
-			"ffmpeg",
-			"/usr/bin/ffmpeg",
-			"/usr/local/bin/ffmpeg",
-		}
-	}
-
-	for _, path := range candidates {
-		if _, err := os.Stat(path); err == nil {
-			return path
-		}
-	}
-
-	// Fall back to assuming it's in PATH
-	return "ffmpeg"
+	return filepath.Join(baseDir, "Zenfile"), nil
 }

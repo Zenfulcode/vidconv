@@ -22,7 +22,7 @@
 <header class="border-b bg-card pt-4">
 	<div class="container flex h-14 items-center justify-between px-4">
 		<div class="flex items-center gap-3">
-			<h1 class="text-xl font-bold">File Converter</h1>
+			<h1 class="text-xl font-bold">Zenfile</h1>
 			{#if settingsStore.appInfo}
 				<Badge variant="outline" class="text-xs">v{settingsStore.appInfo.version}</Badge>
 			{/if}
@@ -79,7 +79,7 @@
 <Dialog.Root bind:open={showAbout}>
 	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header>
-			<Dialog.Title>About File Converter</Dialog.Title>
+			<Dialog.Title>About Zenfile</Dialog.Title>
 			<Dialog.Description>A cross-platform file converter for video and image files.</Dialog.Description>
 		</Dialog.Header>
 		<div class="space-y-4 py-4">
