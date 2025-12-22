@@ -1,69 +1,126 @@
-# Sveltekit Wailsjs template
+# Zenfile
 
-I made this a template such that I dont have to repeat the process of setting this starting application up everytime I start a new project.
+A cross-platform file converter for video and image files, built with [Wails](https://wails.io/), SvelteKit, and Go.
 
-It includes
+## Features
 
-- Sveltekit (trying to stay up to date)
-- Tailwindcss 4
-- Svelte 5
-- Typescript syntax
-- Eslint
-- Prettier
+- 🎬 Video conversion (MP4, MOV, WebM, AVI, MKV, etc.)
+- 🖼️ Image conversion (PNG, JPG, WebP, GIF, etc.)
+- 📦 Batch conversion support
+- 🎯 Drag and drop interface
+- ⚡ Native performance
 
-# Important notes
+## Building
 
-Take from Wails official page: https://wails.io/docs/guides/sveltekit
+Zenfile supports multiple build configurations for different distribution channels.
 
-Server files will cause build failures.
+### Prerequisites
 
-- `+layout.server.ts`, `+page.server.ts`, `+server.ts` or any file with "server" in the name will fail to build as all routes are prerendered.
+- [Go 1.21+](https://go.dev/)
+- [Wails CLI](https://wails.io/docs/gettingstarted/installation)
+- [Bun](https://bun.sh/) (for frontend)
+- FFmpeg (for non-App Store builds)
 
-The Wails runtime unloads with full page navigations!
+### Build Options
 
-- Anything that causes full page navigations: `window.location.href = '/<some>/<page>'` or Context menu reload when using wails dev. What this means is that you can end up losing the ability to call any runtime breaking the app. There are two ways to work around this.
-- Use `import { goto } from '$app/navigation'` then call `goto('/<some>/<page>')` in your `+page.svelte`. This will prevent a full page navigation.
-- If full page navigation can't be prevented the Wails runtime can be added to all pages by adding the below into the `<head>` of myapp/frontend/src/app.html
+| Build Type      | Command                          | Video Backend   | Size  | Use Case                |
+| --------------- | -------------------------------- | --------------- | ----- | ----------------------- |
+| Standard        | `wails build`                    | System FFmpeg   | ~16MB | Development, Homebrew   |
+| Embedded FFmpeg | `wails build -tags embed_ffmpeg` | Embedded FFmpeg | ~90MB | Standalone distribution |
+| App Store       | `wails build -tags appstore`     | AVFoundation    | ~16MB | macOS App Store         |
 
-```svelte
-<head>
-...
-	<meta name="wails-options" content="noautoinject" />
-	<script src="/wails/ipc.js"></script>
-	<script src="/wails/runtime.js"></script>
-...
-</head>
+### Standard Build (uses system FFmpeg)
+
+```bash
+wails build
 ```
 
-See https://wails.io/docs/guides/frontend for more information.
-Initial data can be loaded and refreshed from `+page.ts/+page.js` to `+page.svelte`.
+Requires FFmpeg to be installed on the system:
 
-`+page.ts`/`+page.js` works well with `load()` https://kit.svelte.dev/docs/load#page-data
-`invalidateAll()` in `+page.svelte` will call `load()` from `+page.ts`/`+page.js` https://kit.svelte.dev/docs/load#rerunning-load-functions-manual-invalidation.
+```bash
+# macOS
+brew install ffmpeg
 
-Error Handling
+# Ubuntu/Debian
+sudo apt install ffmpeg
 
-- Expected errors using Throw error works in +page.ts/+page.js with a +error.svelte page. https://kit.svelte.dev/docs/errors#expected-errors
-- Unexpected errors will cause the application to become unusable. Only recovery option (known so far) from unexpected errors is to reload the app. To do this create a file myapp/frontend/src/hooks.client.ts then add the below code to the file.
-
-```ts
-import { WindowReloadApp } from "$lib/wailsjs/runtime/runtime";
-export async function handleError() {
-  WindowReloadApp();
-}
+# Windows (with Chocolatey)
+choco install ffmpeg
 ```
 
-Using Forms and handling functions
+### Embedded FFmpeg Build
 
-- The simplest way is to call a function from the form is the standard, bind:value your variables and prevent submission `<form method="POST" on:submit|preventDefault={handle}>`
-- The more advanced way is to use:enhance (progressive enhancement) which will allow for convenient access to formData, formElement, submitter. The important note is to always cancel() the form which prevents server side behavior. https://kit.svelte.dev/docs/form-actions#progressive-enhancement Example:
+Bundles FFmpeg inside the application for standalone distribution:
 
-```svelte
-<form method="POST" use:enhance={({cancel, formData, formElement, submitter}) => {
-	cancel()
-	console.log(Object.fromEntries(formData))
-	console.log(formElement)
-	console.log(submitter)
-	handle()
-}}>
+```bash
+# 1. Download FFmpeg for your target platform
+./scripts/download-ffmpeg.sh darwin_arm64  # or darwin_amd64, linux_amd64, windows_amd64
+
+# 2. Build with embedded FFmpeg
+wails build -tags embed_ffmpeg
 ```
+
+> **Note:** Only the FFmpeg binary for the target platform is embedded, not all platforms.
+
+### App Store Build (macOS only)
+
+Uses Apple's native AVFoundation framework instead of FFmpeg. This is required for App Store distribution due to licensing requirements.
+
+```bash
+wails build -tags appstore
+```
+
+**Limitations of AVFoundation:**
+
+- Output formats limited to: MP4, MOV, M4V
+- Fewer codec options than FFmpeg
+- macOS only
+
+## Development
+
+```bash
+# Run in development mode
+wails dev
+
+# Run frontend only
+cd frontend && bun run dev
+```
+
+## Architecture
+
+```
+├── app.go                 # Main application logic
+├── app_ffmpeg.go          # FFmpeg initialization (non-App Store)
+├── app_avfoundation.go    # AVFoundation initialization (App Store)
+├── internal/
+│   ├── config/            # Configuration management
+│   ├── services/          # Business logic
+│   │   ├── video_converter.go              # FFmpeg video converter
+│   │   └── video_converter_avfoundation.go # AVFoundation converter
+│   └── ...
+├── pkg/
+│   └── ffmpeg/            # FFmpeg wrapper and embedding
+│       ├── ffmpeg.go      # FFmpeg command wrapper
+│       ├── embed_*.go     # Platform-specific embedding
+│       └── binaries/      # FFmpeg binaries (for embedding)
+└── frontend/              # SvelteKit frontend
+```
+
+## License
+
+This project is licensed under the GPL-3.0 License - see [LICENSE.md](LICENSE.md).
+
+### Third-Party Licenses
+
+See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for information about FFmpeg and other dependencies.
+
+**Important:**
+
+- App Store builds use AVFoundation (no FFmpeg) and are fully compliant with App Store guidelines.
+- Non-App Store builds that include FFmpeg must comply with LGPL 2.1 requirements.
+
+## Tech Stack
+
+- **Backend:** Go, Wails v2
+- **Frontend:** SvelteKit, Svelte 5, TypeScript, Tailwind CSS 4
+- **Video Processing:** FFmpeg (standard) / AVFoundation (App Store)
