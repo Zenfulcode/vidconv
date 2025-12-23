@@ -42,14 +42,16 @@ jobs:
 
   build-macos:
     needs: update-version
-    runs-on: macos-latest
+    runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
         platform:
           - arch: amd64
             name: macos-amd64
+            runner: macos-15-intel
           - arch: arm64
             name: macos-arm64
+            runner: macos-latest
         variant:
           - name: ""
             tags: ""
