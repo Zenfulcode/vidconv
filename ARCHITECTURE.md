@@ -116,19 +116,23 @@ Conversion complete ← Frontend shows result ← Backend saves to DB & returns 
 ### SOLID Principles Implementation
 
 1. **Single Responsibility Principle (SRP)**
+
    - Each service handles one concern (file operations, conversion, settings)
    - Repositories handle only data persistence
    - Logger handles only logging concerns
 
 2. **Open/Closed Principle (OCP)**
+
    - Converter interface allows adding new format converters without modifying existing code
    - File type detectors can be extended via interface implementation
 
 3. **Liskov Substitution Principle (LSP)**
+
    - All converter implementations are interchangeable via the Converter interface
    - Repository implementations can be swapped (e.g., mock for testing)
 
 4. **Interface Segregation Principle (ISP)**
+
    - Small, focused interfaces (FileReader, FileWriter, Converter)
    - Clients depend only on methods they use
 
@@ -204,17 +208,17 @@ frontend/
 ```typescript
 // Using Svelte 5's $state rune for reactive state
 class FilesStore {
-    files = $state<FileInfo[]>([]);
-    selectedFormat = $state<string>('');
-    outputDirectory = $state<string>('');
+  files = $state<FileInfo[]>([]);
+  selectedFormat = $state<string>("");
+  outputDirectory = $state<string>("");
 
-    addFiles(newFiles: FileInfo[]) {
-        this.files = [...this.files, ...newFiles];
-    }
+  addFiles(newFiles: FileInfo[]) {
+    this.files = [...this.files, ...newFiles];
+  }
 
-    clear() {
-        this.files = [];
-    }
+  clear() {
+    this.files = [];
+  }
 }
 
 export const filesStore = new FilesStore();
@@ -275,17 +279,20 @@ type Setting struct {
 ## Logging System
 
 ### Log Levels
+
 - **DEBUG**: Detailed information for debugging
 - **INFO**: General operational information
 - **WARN**: Warning messages for potential issues
 - **ERROR**: Error conditions that should be addressed
 
 ### Log Output
+
 - Console output for development
 - File output (`~/.zenfile/logs/app.log`) for production
 - Automatic log rotation (configurable size limit)
 
 ### Log Format
+
 ```
 2024-01-15 10:30:45 [INFO] [converter] Starting conversion: input.mp4 -> output.webm
 2024-01-15 10:30:46 [DEBUG] [ffmpeg] Command: ffmpeg -i input.mp4 -c:v libvpx-vp9 output.webm
@@ -295,32 +302,36 @@ type Setting struct {
 ## Supported Formats
 
 ### Video Formats
-| Input | Output Options |
-|-------|----------------|
+
+| Input | Output Options           |
+| ----- | ------------------------ |
 | MP4   | WebM, AVI, MKV, MOV, GIF |
-| WebM  | MP4, AVI, MKV, MOV, GIF |
+| WebM  | MP4, AVI, MKV, MOV, GIF  |
 | AVI   | MP4, WebM, MKV, MOV, GIF |
 | MKV   | MP4, WebM, AVI, MOV, GIF |
 | MOV   | MP4, WebM, AVI, MKV, GIF |
 
 ### Image Formats
-| Input | Output Options |
-|-------|----------------|
-| PNG   | JPG, JPEG, WebP, GIF, BMP, TIFF |
-| JPG/JPEG | PNG, WebP, GIF, BMP, TIFF |
-| WebP  | PNG, JPG, JPEG, GIF, BMP, TIFF |
-| GIF   | PNG, JPG, JPEG, WebP, BMP, TIFF |
-| BMP   | PNG, JPG, JPEG, WebP, GIF, TIFF |
-| TIFF  | PNG, JPG, JPEG, WebP, GIF, BMP |
+
+| Input    | Output Options                  |
+| -------- | ------------------------------- |
+| PNG      | JPG, JPEG, WebP, GIF, BMP, TIFF |
+| JPG/JPEG | PNG, WebP, GIF, BMP, TIFF       |
+| WebP     | PNG, JPG, JPEG, GIF, BMP, TIFF  |
+| GIF      | PNG, JPG, JPEG, WebP, BMP, TIFF |
+| BMP      | PNG, JPG, JPEG, WebP, GIF, TIFF |
+| TIFF     | PNG, JPG, JPEG, WebP, GIF, BMP  |
 
 ## Error Handling Strategy
 
 ### Backend Errors
+
 1. **Validation Errors**: Return structured error with field-specific messages
 2. **Conversion Errors**: Log full stack trace, return user-friendly message
 3. **System Errors**: Log with context, attempt recovery or graceful degradation
 
 ### Frontend Errors
+
 1. **Display toast notifications** for user-actionable errors
 2. **Show detailed error dialogs** for conversion failures
 3. **Provide retry options** where applicable
@@ -328,16 +339,19 @@ type Setting struct {
 ## Cross-Platform Considerations
 
 ### macOS
+
 - Uses native file dialogs via Wails
 - FFmpeg installed via Homebrew or bundled
 - App bundle (.app) for distribution
 
 ### Windows
+
 - Uses native file dialogs via Wails
 - FFmpeg bundled or installed separately
 - NSIS installer for distribution
 
 ### Linux
+
 - Uses native file dialogs via Wails
 - FFmpeg installed via package manager
 - AppImage or .deb/.rpm for distribution
