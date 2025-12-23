@@ -15,6 +15,7 @@
 	} from '$lib/components/converter';
 	import { converterStore } from '$lib/stores/converter.svelte';
 	import { settingsStore } from '$lib/stores/settings.svelte';
+	import { formatStore } from '$lib/stores/formats.svelte';
 	import { GetSettings, GetAppInfo, CheckFFmpeg, ConvertFiles } from '$lib/wailsjs/go/main/App';
 	import { EventsOn } from '$lib/wailsjs/runtime/runtime';
 	import type {
@@ -48,6 +49,9 @@
 				converterStore.updateProgress(progress);
 				converterStore.setOverallProgress(progress.progress);
 			});
+
+			// Load supported formats from backend
+			await formatStore.loadFormats();
 
 			settingsStore.setLoading(false);
 		} catch (err) {

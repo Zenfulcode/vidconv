@@ -8,7 +8,13 @@
 	import { formatStore } from '$lib/stores/formats.svelte';
 	import { toggleMode, setMode, mode } from 'mode-watcher';
 
-	let backendName = $derived(formatStore.isAVFoundation() ? 'AVFoundation' : 'FFmpeg');
+	// Derive backend name from appInfo (primary) or formatStore (fallback)
+	let backendName = $derived.by(() => {
+		if (settingsStore.appInfo?.converterBackend) {
+			return settingsStore.appInfo.converterBackend === 'avfoundation' ? 'AVFoundation' : 'FFmpeg';
+		}
+		return formatStore.isAVFoundation() ? 'AVFoundation' : 'FFmpeg';
+	});
 
 	let showAbout = $state(false);
 

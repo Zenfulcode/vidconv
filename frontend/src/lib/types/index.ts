@@ -78,6 +78,7 @@ export interface AppInfo {
 	dataDir: string;
 	logFile: string;
 	ffmpegVersion?: string;
+	converterBackend?: string;
 }
 
 // Format options
