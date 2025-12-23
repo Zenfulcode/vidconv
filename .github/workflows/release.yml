@@ -142,8 +142,8 @@ jobs:
           # Staple the notarization ticket to the app
           xcrun stapler staple Zenfile.app
 
-          # Verify notarization
-          spctl --assess --type exec -vv Zenfile.app
+          # Verify stapling succeeded
+          xcrun stapler validate Zenfile.app
 
           # Clean up notarization zip
           rm Zenfile-notarize.zip
