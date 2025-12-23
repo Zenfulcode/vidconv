@@ -85,7 +85,7 @@ jobs:
         env:
           GOARCH: ${{ matrix.platform.arch }}
         run: |
-          wails build -platform darwin/${{ matrix.platform.arch }} -o zenfile
+          wails build -platform darwin/${{ matrix.platform.arch }} -o Zenfile
 
       # Code Signing
       - name: Import Code Signing Certificate
