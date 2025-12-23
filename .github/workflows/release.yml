@@ -154,7 +154,7 @@ jobs:
 
       - name: Create DMG
         run: |
-          cd build/bin/darwin
+          cd build/darwin
           appdmg appdmg.json Zenfile-${{ matrix.platform.name }}-${{ needs.update-version.outputs.version }}.dmg
 
       - name: Sign the DMG
