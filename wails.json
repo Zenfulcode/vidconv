@@ -9,13 +9,13 @@
   "frontend:dev:serverUrl": "auto",
   "author": {
     "name": "gustaavik",
-    "email": "wailstemplate@zenfulcode.com"
+    "email": "zenfile@zenfulcode.com"
   },
   "info": {
     "companyName": "Zenfulcode",
     "productName": "Zenfile",
     "productVersion": "v1.0.0",
-    "copyright": "",
+    "copyright": "Copyright (C) 2025 Zenfulcode",
     "comments": "Open Source image and video converter (github.com/zenfulcode/zenfile)"
   }
 }

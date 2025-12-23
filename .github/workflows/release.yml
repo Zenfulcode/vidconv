@@ -1,0 +1,223 @@
+name: Release Build
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+env:
+  GO_VERSION: '1.24'
+  NODE_VERSION: '20'
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get release version
+        id: get-version
+        run: |
+          VERSION=${GITHUB_REF_NAME}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+      - name: Update wails.json version
+        run: |
+          VERSION=${{ steps.get-version.outputs.version }}
+          # Update the productVersion in wails.json
+          sed -i "s/\"productVersion\": \".*\"/\"productVersion\": \"$VERSION\"/" wails.json
+          cat wails.json
+
+      - name: Upload updated wails.json
+        uses: actions/upload-artifact@v4
+        with:
+          name: wails-config
+          path: wails.json
+
+  build-macos:
+    needs: update-version
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        platform:
+          - arch: amd64
+            name: macos-amd64
+          - arch: arm64
+            name: macos-arm64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download updated wails.json
+        uses: actions/download-artifact@v4
+        with:
+          name: wails-config
+          path: .
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          bun install
+
+      - name: Build macOS app
+        env:
+          GOARCH: ${{ matrix.platform.arch }}
+        run: |
+          wails build -platform darwin/${{ matrix.platform.arch }} -o zenfile
+
+      - name: Create ZIP archive
+        run: |
+          cd build/bin
+          zip -r Zenfile-${{ matrix.platform.name }}-${{ needs.update-version.outputs.version }}.zip Zenfile.app
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zenfile-${{ matrix.platform.name }}
+          path: build/bin/Zenfile-${{ matrix.platform.name }}-${{ needs.update-version.outputs.version }}.zip
+
+  build-windows:
+    needs: update-version
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download updated wails.json
+        uses: actions/download-artifact@v4
+        with:
+          name: wails-config
+          path: .
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          bun install
+
+      - name: Build Windows app
+        run: |
+          wails build -platform windows/amd64 -o zenfile.exe
+
+      - name: Create ZIP archive
+        run: |
+          cd build/bin
+          Compress-Archive -Path zenfile.exe -DestinationPath Zenfile-windows-amd64-${{ needs.update-version.outputs.version }}.zip
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zenfile-windows-amd64
+          path: build/bin/Zenfile-windows-amd64-${{ needs.update-version.outputs.version }}.zip
+
+  build-linux:
+    needs: update-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download updated wails.json
+        uses: actions/download-artifact@v4
+        with:
+          name: wails-config
+          path: .
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          bun install
+
+      - name: Build Linux app
+        run: |
+          wails build -platform linux/amd64 -o zenfile
+
+      - name: Create archive
+        run: |
+          cd build/bin
+          tar -czvf Zenfile-linux-amd64-${{ needs.update-version.outputs.version }}.tar.gz zenfile
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zenfile-linux-amd64
+          path: build/bin/Zenfile-linux-amd64-${{ needs.update-version.outputs.version }}.tar.gz
+
+  upload-release-assets:
+    needs: [update-version, build-macos, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: Zenfile-*
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -la artifacts/
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
