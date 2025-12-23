@@ -50,17 +50,40 @@ choco install ffmpeg
 
 ### Embedded FFmpeg Build
 
-Bundles FFmpeg inside the application for standalone distribution:
+Bundles FFmpeg inside the application for standalone distribution. FFmpeg is compiled from source to ensure LGPL compliance.
 
 ```bash
-# 1. Download FFmpeg for your target platform
+# 1. Install build dependencies (macOS)
+brew install nasm yasm pkg-config
+# Optional for better codec support:
+brew install x264 x265 libvpx aom opus libvorbis
+
+# 2. Build FFmpeg from source for your target platform
 ./scripts/download-ffmpeg.sh darwin_arm64  # or darwin_amd64, linux_amd64, windows_amd64
 
-# 2. Build with embedded FFmpeg
+# 3. Build with embedded FFmpeg
 wails build -tags embed_ffmpeg
 ```
 
 > **Note:** Only the FFmpeg binary for the target platform is embedded, not all platforms.
+
+#### Build Script Options
+
+```bash
+# Build for current platform (auto-detected)
+./scripts/download-ffmpeg.sh
+
+# Build for specific platforms
+./scripts/download-ffmpeg.sh darwin_arm64 darwin_amd64
+
+# Show required dependencies
+./scripts/download-ffmpeg.sh --deps
+
+# Clean and rebuild
+./scripts/download-ffmpeg.sh --clean darwin_arm64
+```
+
+The build script saves the FFmpeg source tarball at `pkg/ffmpeg/binaries/source/` for LGPL redistribution compliance.
 
 ### App Store Build (macOS only)
 

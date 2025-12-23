@@ -8,3 +8,4 @@ windows_amd64/
 # Keep the directory structure
 !.gitkeep
 !README.md
+source/
