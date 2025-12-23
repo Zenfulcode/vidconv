@@ -98,8 +98,8 @@
 					<span class="truncate text-xs">{settingsStore.appInfo.logFile}</span>
 
 					{#if settingsStore.appInfo.ffmpegVersion}
-						<span class="text-muted-foreground">FFmpeg:</span>
-						<span class="truncate text-xs">{settingsStore.appInfo.ffmpegVersion}</span>
+						<span class="text-muted-foreground">{backendName}:</span>
+						<span class="text-xs">{settingsStore.appInfo.ffmpegVersion}</span>
 					{/if}
 				</div>
 			{/if}
